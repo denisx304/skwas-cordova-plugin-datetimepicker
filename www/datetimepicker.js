@@ -120,7 +120,7 @@ DateTimePicker.prototype.show = function(options, successCallback, errorCallback
 	if (typeof settings.cancel !== "function") settings.cancel = noop;
 	if (typeof settings.error !== "function") settings.error = errorCallback || noop;
 	
-	if (setting.mode == "duration") {
+	if (settings.mode == "duration") {
 		if (isNaN(settings.duration)) {
 			onPluginError("The value for duration (" + settings.duration +") is NaN.");
 			return;
