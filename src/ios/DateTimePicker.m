@@ -89,7 +89,7 @@
     picker.headerBackgroundColor = [UIColor colorWithRed:0.92f green:0.92f blue:0.92f alpha:0.95f];
     
     picker.dismissedHandler = ^(id sender) {
-        [self callbackSuccessWithJavascript:weakPicker.datePicker.date];
+        [self callbackSuccessWithJavascript:weakPicker.datePicker];
         isVisible = NO;
     };
     
@@ -142,7 +142,9 @@
     if (!allowOldDates) datePicker.minimumDate = [NSDate date];
     if (!allowFutureDates) datePicker.maximumDate = [NSDate date];
     
-    if ([mode isEqualToString:@"date"])
+	if ([mode isEqualToString:@"duration"])
+		datePicker.datePickerMode = UIDatePickerModeCountDownTimer;
+    else if ([mode isEqualToString:@"date"])
         datePicker.datePickerMode = UIDatePickerModeDate;
     else if ([mode isEqualToString:@"time"])
         datePicker.datePickerMode = UIDatePickerModeTime;
@@ -157,12 +159,15 @@
 }
 
 // Sends the date to the plugin javascript handler.
-- (void)callbackSuccessWithJavascript:(NSDate *)date
+- (void)callbackSuccessWithJavascript:(UIDatePicker *)picker
 {
-    long long ticks = ((long long)(int)[date timeIntervalSince1970]) * 1000;
-    NSMutableDictionary *result = [[NSMutableDictionary alloc] init];
+	BOOL isDuration = (picker.datePickerMode == UIDatePickerModeCountDownTimer);
+	NSMutableDictionary *result = [[NSMutableDictionary alloc] init];
+	long long ticks = isDuration ? ((long long)(int)picker.countDownDuration) : ((long long)(int)[picker.date timeIntervalSince1970]) * 1000;
+	
     [result setObject:[NSNumber numberWithLongLong:ticks] forKey:@"ticks"];
-    
+	[result setObject:[NSNumber numberWithBool:isDuration] forKey:@"isDuration"];
+		
     CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:result];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:self.callbackId];
 }

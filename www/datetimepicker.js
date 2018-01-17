@@ -71,6 +71,7 @@ DateTimePicker.prototype.show = function(options, successCallback, errorCallback
 		// {
 		//	 "result": {
 		//	   "ticks": a 64-bit int (ticks),
+		//     "isDuration": true|false,
 		//	   "cancelled": true|false
 		//	 }
 		// }
@@ -80,9 +81,13 @@ DateTimePicker.prototype.show = function(options, successCallback, errorCallback
 				if (result.cancelled === true) {
 					settings.cancel();
 				} else if (typeof result.ticks === "number") {
-					var resultDate = new Date(result.ticks);
-					if (isDate(resultDate)) {
-						settings.success(resultDate);
+					if (result.isDuration) {
+						settings.success(result.ticks);
+					} else {
+						var resultDate = new Date(result.ticks);
+						if (isDate(resultDate)) {
+							settings.success(resultDate);
+						}
 					}
 				}
 				return;
