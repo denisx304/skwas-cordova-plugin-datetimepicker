@@ -43,6 +43,7 @@ DateTimePicker.prototype.show = function(options, successCallback, errorCallback
 	var settings = {
 		mode: "date",
 		date: new Date(),
+		duration: 0,
 		allowOldDates: null,
 		allowFutureDates: null,
 		minuteInterval: 1,
@@ -118,12 +119,20 @@ DateTimePicker.prototype.show = function(options, successCallback, errorCallback
 	if (typeof settings.success !== "function") settings.success = successCallback || noop;
 	if (typeof settings.cancel !== "function") settings.cancel = noop;
 	if (typeof settings.error !== "function") settings.error = errorCallback || noop;
-
-	// Check if dates are valid and convert to ticks since epoch.
-	if (!checkDate(settings, "date", onPluginError)) {
-		return;
+	
+	if (setting.mode == "duration") {
+		if (isNaN(settings.duration)) {
+			onPluginError("The value for duration (" + settings.duration +") is NaN.");
+			return;
+		}
+		settings.ticks = settings.duration;
+	} else {
+		// Check if dates are valid and convert to ticks since epoch.
+		if (!checkDate(settings, "date", onPluginError)) {
+			return;
+		}
+		settings.ticks = settings.date.valueOf();
 	}
-	settings.ticks = settings.date.valueOf();
 	
 	exec(onPluginSuccess, onPluginError, "DateTimePicker", "show", [settings]);
 };
