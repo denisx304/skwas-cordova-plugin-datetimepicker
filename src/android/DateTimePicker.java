@@ -22,6 +22,7 @@ import org.json.JSONObject;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.TimeZone;
 
 public class DateTimePicker extends CordovaPlugin {
 
@@ -54,7 +55,7 @@ public class DateTimePicker extends CordovaPlugin {
 			this();
 
 			mode = obj.optString("mode", mode);
-			isDuration = MODE_DURATION.equalsIgnoreCase(options.mode);
+			isDuration = MODE_DURATION.equalsIgnoreCase(mode);
 
 			date = new Date(obj.getLong("ticks") * (isDuration ? 1000 : 1)); //duration comes in seconds
 			minuteInterval = obj.optInt("minuteInterval", 1);
@@ -133,7 +134,7 @@ public class DateTimePicker extends CordovaPlugin {
 		}
 
 		// Set calendar.
-		final Calendar calendar = GregorianCalendar.getInstance();
+		final Calendar calendar = options.isDuration ? GregorianCalendar.getInstance(TimeZone.getTimeZone("UTC")) : GregorianCalendar.getInstance();
 		calendar.setTime(options.date);
 
 		if (MODE_TIME.equalsIgnoreCase(options.mode) || MODE_DURATION.equalsIgnoreCase(options.mode)) {
