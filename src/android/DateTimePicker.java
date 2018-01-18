@@ -34,6 +34,7 @@ public class DateTimePicker extends CordovaPlugin {
 		@NonNull
 		public String mode = MODE_DATE;
 		public Date date = new Date();
+		public boolean isDuration = false;
 		public boolean allowOldDates = true;
 		public boolean allowFutureDates = true;
 		public int minuteInterval = 1;
@@ -53,8 +54,9 @@ public class DateTimePicker extends CordovaPlugin {
 			this();
 
 			mode = obj.optString("mode", mode);
+			isDuration = MODE_DURATION.equalsIgnoreCase(options.mode);
 
-			date = new Date(obj.getLong("ticks"));
+			date = new Date(obj.getLong("ticks") * (isDuration ? 1000 : 1)); //duration comes in seconds
 			minuteInterval = obj.optInt("minuteInterval", 1);
 
 			allowOldDates = obj.optBoolean("allowOldDates", allowOldDates);
@@ -79,6 +81,7 @@ public class DateTimePicker extends CordovaPlugin {
 		}
 	}
 
+	private static final String MODE_DURATION = "duration";
 	private static final String MODE_DATE = "date";
 	private static final String MODE_TIME = "time";
 	private static final String MODE_DATETIME = "datetime";
@@ -133,7 +136,7 @@ public class DateTimePicker extends CordovaPlugin {
 		final Calendar calendar = GregorianCalendar.getInstance();
 		calendar.setTime(options.date);
 
-		if (MODE_TIME.equalsIgnoreCase(options.mode)) {
+		if (MODE_TIME.equalsIgnoreCase(options.mode) || MODE_DURATION.equalsIgnoreCase(options.mode)) {
 			runnable = showTimeDialog(datePickerPlugin, callbackContext, options, calendar);
 		} else if (MODE_DATE.equalsIgnoreCase(options.mode) || MODE_DATETIME.equalsIgnoreCase(options.mode)) {
 			runnable = showDateDialog(datePickerPlugin, callbackContext, options, calendar);
@@ -224,13 +227,14 @@ public class DateTimePicker extends CordovaPlugin {
 	 * @param calendar The calendar with the new date and/or time.
 	 * @param callbackContext The callback context.
 	 */
-	private static void onCalendarSet(Calendar calendar, CallbackContext callbackContext) {
+	private static void onCalendarSet(Calendar calendar, CallbackContext callbackContext, boolean isDuration) {
 		try {
 			JSONObject result = new JSONObject();
 			Date date = calendar.getTime();
 			// Due to lack of browser/user agent support for ISO 8601 parsing, we provide ticks since epoch.
 			// The Javascript date constructor works far more reliably this way, even on old JS engines.
-			result.put("ticks", date.getTime());
+			result.put("ticks", date.getTime() / (isDuration ? 1000 : 1));
+			result.put("isDuration", isDuration);
 			result.put("cancelled", false);
 			callbackContext.success(result);
 		} catch (JSONException ex) {
@@ -265,7 +269,7 @@ public class DateTimePicker extends CordovaPlugin {
 						showTimeDialog(mDatePickerPlugin, mCallbackContext, mOptions, mCalendar)
 				);
 			} else {
-				onCalendarSet(mCalendar, mCallbackContext);
+				onCalendarSet(mCalendar, mCallbackContext, false);
 			}
 		}
 	}
@@ -293,7 +297,7 @@ public class DateTimePicker extends CordovaPlugin {
 			mCalendar.set(Calendar.SECOND, 0);
 			mCalendar.set(Calendar.MILLISECOND, 0);
 
-			onCalendarSet(mCalendar, mCallbackContext);
+			onCalendarSet(mCalendar, mCallbackContext, mOptions.isDuration);
 		}
 	}
 }
